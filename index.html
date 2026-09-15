@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>placeholder</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --border: #d9dce1;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --error: #d92d20;
+    --success: #067647;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 16px;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  header h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+  }
+  header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 16px;
+  }
+  form {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .field {
+    margin-bottom: 22px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .hint {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  input[type="text"],
+  input[type="email"],
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+  input[type="text"]:disabled {
+    background: #f1f2f4;
+    color: var(--muted);
+  }
+  textarea {
+    min-height: 160px;
+    resize: vertical;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+  .checkbox-row label {
+    margin: 0;
+    font-weight: 500;
+  }
+  .word-count {
+    text-align: right;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .word-count.over {
+    color: var(--error);
+    font-weight: 600;
+  }
+  button[type="submit"] {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button[type="submit"]:hover {
+    background: var(--accent-hover);
+  }
+  button[type="submit"]:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+  .status {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .status.error { color: var(--error); }
+  .status.success { color: var(--success); }
+  .required-mark { color: var(--error); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>placeholder</h1>
+      <p>placeholder</p>
+    </header>
+
+    <form id="submission-form" novalidate>
+      <div class="field">
+        <label for="fullName">Full Name <span class="required-mark" id="name-required">*</span></label>
+        <input type="text" id="fullName" name="fullName" autocomplete="name">
+      </div>
+
+      <div class="field checkbox-row">
+        <input type="checkbox" id="anonymous" name="anonymous">
+        <label for="anonymous">Anonymous</label>
+      </div>
+
+      <div class="field">
+        <label for="email">Email Address <span class="hint">(optional)</span></label>
+        <input type="email" id="email" name="email" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label for="response">Your Submission <span class="required-mark">*</span> <span class="hint">(max 500 words)</span></label>
+        <textarea id="response" name="response" required></textarea>
+        <div class="word-count" id="word-count">0 / 500 words</div>
+      </div>
+
+      <button type="submit" id="submit-btn">Submit</button>
+      <div class="status" id="status"></div>
+    </form>
+  </div>
+
+  <script>
+    // TODO: replace with your deployed Google Apps Script web app URL (see README.md)
+    const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    const MAX_WORDS = 500;
+    const form = document.getElementById("submission-form");
+    const fullNameInput = document.getElementById("fullName");
+    const anonymousCheckbox = document.getElementById("anonymous");
+    const nameRequiredMark = document.getElementById("name-required");
+    const emailInput = document.getElementById("email");
+    const responseInput = document.getElementById("response");
+    const wordCountEl = document.getElementById("word-count");
+    const statusEl = document.getElementById("status");
+    const submitBtn = document.getElementById("submit-btn");
+
+    function countWords(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return 0;
+      return trimmed.split(/\s+/).length;
+    }
+
+    function updateWordCount() {
+      const words = countWords(responseInput.value);
+      wordCountEl.textContent = `${words} / ${MAX_WORDS} words`;
+      wordCountEl.classList.toggle("over", words > MAX_WORDS);
+    }
+
+    responseInput.addEventListener("input", () => {
+      const words = responseInput.value.trim().split(/\s+/);
+      if (words.length > MAX_WORDS && responseInput.value.trim() !== "") {
+        responseInput.value = words.slice(0, MAX_WORDS).join(" ");
+      }
+      updateWordCount();
+    });
+
+    anonymousCheckbox.addEventListener("change", () => {
+      const isAnonymous = anonymousCheckbox.checked;
+      fullNameInput.disabled = isAnonymous;
+      nameRequiredMark.style.display = isAnonymous ? "none" : "inline";
+      if (isAnonymous) {
+        fullNameInput.value = "";
+      }
+    });
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = `status ${type || ""}`;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setStatus("", "");
+
+      const isAnonymous = anonymousCheckbox.checked;
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const response = responseInput.value.trim();
+      const wordCount = countWords(response);
+
+      if (!isAnonymous && !fullName) {
+        setStatus("Please enter your full name, or check \"Anonymous\".", "error");
+        return;
+      }
+      if (!response) {
+        setStatus("Please enter a submission.", "error");
+        return;
+      }
+      if (wordCount > MAX_WORDS) {
+        setStatus(`Your submission is over the ${MAX_WORDS} word limit.`, "error");
+        return;
+      }
+      if (SCRIPT_URL.startsWith("PASTE_")) {
+        setStatus("Form is not yet connected to a spreadsheet. See README.md.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setStatus("Submitting...", "");
+
+      const payload = {
+        fullName: isAnonymous ? "Anonymous" : fullName,
+        anonymous: isAnonymous,
+        email: email,
+        response: response
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        setStatus("Thank you! Your submission has been received.", "success");
+        form.reset();
+        fullNameInput.disabled = false;
+        nameRequiredMark.style.display = "inline";
+        updateWordCount();
+      } catch (err) {
+        setStatus("Something went wrong submitting your response. Please try again.", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
