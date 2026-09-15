@@ -9,9 +9,10 @@ and a response text box capped at 500 words.
 
 ## Setup
 
-1. **Create the spreadsheet.** Make a new Google Sheet — this is where
-   submissions will land. You don't need to add any columns; the script
-   creates a `Responses` sheet and header row on first submission.
+1. **Spreadsheet.** Submissions land in
+   [MHEC Submissions](https://docs.google.com/spreadsheets/d/17nvPl8vs9778q2LG9UWkdgKlK2UWhSkTRT2vGVVx-HQ/edit).
+   You don't need to add any columns; the script creates a `Responses` sheet
+   and header row on first submission.
 
 2. **Add the Apps Script backend.**
    - In the Sheet, go to `Extensions > Apps Script`.
