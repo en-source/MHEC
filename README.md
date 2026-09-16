@@ -15,9 +15,14 @@ and a response text box capped at 500 words.
    and header row on first submission.
 
 2. **Add the Apps Script backend.**
-   - In the Sheet, go to `Extensions > Apps Script`.
+   - Go to [script.google.com](https://script.google.com) and create a new,
+     standalone project (**not** bound to the sheet — this avoids org
+     policies that can block anonymous access to domain-bound web apps).
    - Delete the placeholder code and paste in the contents of
-     [`apps-script/Code.gs`](apps-script/Code.gs).
+     [`apps-script/Code.gs`](apps-script/Code.gs). It references the
+     spreadsheet by ID (`SPREADSHEET_ID`), which is already set.
+   - If this project's account is **not** the spreadsheet's owner, share the
+     sheet with that account as **Editor** first, or `appendRow` will fail.
    - Save the project (give it any name).
 
 3. **Deploy it as a web app.**
@@ -25,10 +30,15 @@ and a response text box capped at 500 words.
    - Click the gear icon next to "Select type" and choose `Web app`.
    - Set **Execute as**: `Me`.
    - Set **Who has access**: `Anyone`.
-   - Click `Deploy`, and authorize the script when prompted (it only needs
-     access to this one spreadsheet).
+   - Click `Deploy`, and authorize the script when prompted.
    - Copy the resulting **Web app URL** — it looks like
      `https://script.google.com/macros/s/XXXXXXXX/exec`.
+   - Verify it's actually publicly reachable by opening that URL in an
+     incognito/private window (logged out) — it should show
+     `Script function not found: doGet`, not a Google sign-in page. If it
+     asks you to sign in, the deployment isn't truly public yet (this
+     commonly happens with Google Workspace accounts due to org sharing
+     policy, even with "Anyone" selected).
 
 4. **Connect the form.**
    - Open [`index.html`](index.html) and replace

@@ -1,6 +1,7 @@
-// Paste this into the Apps Script editor (Extensions > Apps Script) of the
-// Google Sheet you want submissions to land in. See README.md for setup steps.
+// Paste this into a standalone Apps Script project (script.google.com) and
+// deploy it as a web app. See README.md for setup steps.
 
+const SPREADSHEET_ID = "17nvPl8vs9778q2LG9UWkdgKlK2UWhSkTRT2vGVVx-HQ";
 const SHEET_NAME = "Responses";
 const MAX_WORDS = 500;
 
@@ -33,7 +34,7 @@ function doPost(e) {
 }
 
 function getOrCreateSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
