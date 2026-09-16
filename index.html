@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>placeholder</title>
+<title>MMMRC Report</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -36,10 +36,17 @@
     font-size: 28px;
     margin: 0 0 8px;
   }
-  header p {
-    margin: 0;
-    color: var(--muted);
+  .intro {
+    margin-bottom: 32px;
+  }
+  .intro p {
+    margin: 0 0 16px;
+    color: var(--text);
     font-size: 16px;
+    line-height: 1.5;
+  }
+  .intro p:last-child {
+    margin-bottom: 0;
   }
   form {
     background: var(--card-bg);
@@ -140,9 +147,15 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>placeholder</h1>
-      <p>placeholder</p>
+      <h1>The MMMRC Report is a culmination of real lives that were lost. Families that are now incomplete.</h1>
     </header>
+
+    <div class="intro">
+      <p>The goal of the report is to make meaning of these losses - learn from them so they don't happen again.</p>
+      <p>We don't know for sure when the report will be released. In the meantime, we want to use our platform to uplift your stories.</p>
+      <p>What is your experience in maternal healthcare in Texas? Why do you care about the report being released? What do you want people to know? Share your thoughts, feelings and stories below.</p>
+      <p>Be sure to tell us if you want your name shared with your story, or if you'd rather be identified only by city and state.</p>
+    </div>
 
     <form id="submission-form" novalidate>
       <div class="field">
