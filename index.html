@@ -106,6 +106,38 @@
     margin: 0;
     font-weight: 500;
   }
+  input[type="file"] {
+    width: 100%;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .photo-preview-wrap {
+    margin-top: 12px;
+  }
+  .photo-preview-wrap[hidden] {
+    display: none;
+  }
+  .photo-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 240px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 6px;
+    color: var(--accent);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .photo-consent {
+    margin-top: 12px;
+  }
   .word-count {
     text-align: right;
     font-size: 13px;
@@ -179,6 +211,19 @@
         <div class="word-count" id="word-count">0 / 500 words</div>
       </div>
 
+      <div class="field">
+        <label for="photo">Photo <span class="hint">(optional - a photo that connects with your story)</span></label>
+        <input type="file" id="photo" name="photo" accept="image/*">
+        <div class="photo-preview-wrap" id="photo-preview-wrap" hidden>
+          <img id="photo-preview" class="photo-preview" alt="Preview of the selected photo">
+          <button type="button" class="link-button" id="photo-remove">Remove photo</button>
+        </div>
+        <div class="checkbox-row photo-consent">
+          <input type="checkbox" id="photoConsent" name="photoConsent">
+          <label for="photoConsent">I give permission to share this photo with my story</label>
+        </div>
+      </div>
+
       <button type="submit" id="submit-btn">Submit</button>
       <div class="status" id="status"></div>
     </form>
@@ -198,6 +243,76 @@
     const wordCountEl = document.getElementById("word-count");
     const statusEl = document.getElementById("status");
     const submitBtn = document.getElementById("submit-btn");
+    const photoInput = document.getElementById("photo");
+    const photoConsentCheckbox = document.getElementById("photoConsent");
+    const photoPreviewWrap = document.getElementById("photo-preview-wrap");
+    const photoPreview = document.getElementById("photo-preview");
+    const photoRemoveBtn = document.getElementById("photo-remove");
+
+    const MAX_PHOTO_DIMENSION = 1600;
+    const MAX_PHOTO_FILE_BYTES = 20 * 1024 * 1024;
+    let photoPreviewUrl = null;
+
+    function clearPhoto() {
+      photoInput.value = "";
+      photoPreviewWrap.hidden = true;
+      photoPreview.removeAttribute("src");
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+        photoPreviewUrl = null;
+      }
+    }
+
+    photoInput.addEventListener("change", () => {
+      setStatus("", "");
+      const file = photoInput.files[0];
+      if (!file) {
+        clearPhoto();
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        clearPhoto();
+        setStatus("Please choose an image file.", "error");
+        return;
+      }
+      if (file.size > MAX_PHOTO_FILE_BYTES) {
+        clearPhoto();
+        setStatus("That photo is too large. Please choose one under 20 MB.", "error");
+        return;
+      }
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      photoPreviewUrl = URL.createObjectURL(file);
+      photoPreview.src = photoPreviewUrl;
+      photoPreviewWrap.hidden = false;
+    });
+
+    photoRemoveBtn.addEventListener("click", clearPhoto);
+
+    // Downscale and re-encode as JPEG so phone photos upload quickly.
+    function compressPhoto(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const scale = Math.min(1, MAX_PHOTO_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.naturalWidth * scale);
+          canvas.height = Math.round(img.naturalHeight * scale);
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          resolve({ mimeType: "image/jpeg", data: dataUrl.split(",")[1] });
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("Could not read that image."));
+        };
+        img.src = url;
+      });
+    }
 
     function countWords(text) {
       const trimmed = text.trim();
@@ -267,10 +382,16 @@
         fullName: isAnonymous ? "Anonymous" : fullName,
         anonymous: isAnonymous,
         email: email,
-        response: response
+        response: response,
+        photo: null,
+        photoConsent: photoConsentCheckbox.checked
       };
 
       try {
+        if (photoInput.files[0]) {
+          payload.photo = await compressPhoto(photoInput.files[0]);
+        }
+
         // Apps Script web apps don't return CORS headers on doPost, so the
         // response body can't be read from the browser. `no-cors` still
         // delivers the request and lets the script run; we just can't
@@ -283,11 +404,14 @@
         });
         setStatus("Thank you! Your submission has been received.", "success");
         form.reset();
+        clearPhoto();
         fullNameInput.disabled = false;
         nameRequiredMark.style.display = "inline";
         updateWordCount();
       } catch (err) {
-        setStatus("Something went wrong submitting your response. Please try again.", "error");
+        setStatus(err.message === "Could not read that image."
+          ? "We couldn't read that photo. Please try a different image, or remove it and submit without one."
+          : "Something went wrong submitting your response. Please try again.", "error");
       } finally {
         submitBtn.disabled = false;
       }

@@ -5,7 +5,15 @@ as rows to a Google Sheet, using a Google Apps Script web app as the backend
 (no server or paid hosting needed).
 
 Fields: Full Name (or "Anonymous" via checkbox), Email Address (optional),
-and a response text box capped at 500 words.
+a response text box capped at 500 words, and an optional photo with a
+"permission to share" checkbox.
+
+Photos are downscaled in the browser (max 1600px, JPEG) and saved by the
+script to a private Drive folder named `MHEC Submission Photos` in the
+account that runs the script. The sheet gets a `Photo Link` column and a
+`Photo Consent` column (TRUE/FALSE). The script shares the folder with
+`PHOTO_SHARE_WITH` (set at the top of `Code.gs`) so the sheet owner can open
+the links.
 
 ## Setup
 
@@ -60,3 +68,8 @@ and a response text box capped at 500 words.
 - If you ever change the Apps Script code, you need to create a **new
   deployment version** (`Deploy > Manage deployments > Edit > New version`)
   for the changes to take effect on the live URL.
+- The photo feature makes the script use Google Drive, so the first
+  redeploy after adding it asks you to re-authorize with the extra Drive
+  permission.
+- Deploy the updated `Code.gs` **before** the updated `index.html` goes
+  live, otherwise photos submitted in between are dropped by the old script.
